@@ -48,6 +48,7 @@
       <div>
         <p class="eyebrow">Your smart start page</p>
         <h1>Work faster, stay focused</h1>
+        <p id="welcomeLine" class="welcome-line">Welcome, Ashish Cherian.</p>
         <p class="tagline">Practical. Fast. Personal. Every important link in one clean place.</p>
       </div>
       <div class="clock-wrap">
@@ -66,32 +67,56 @@
       </p>
     </section>
 
+    <section class="hero-stats" aria-label="ShortcutHub overview">
+      <article class="stat-card">
+        <p class="stat-label">Creator</p>
+        <h3 id="heroName">Ashish Cherian</h3>
+        <p class="stat-copy">Your personalized command center is ready.</p>
+      </article>
+      <article class="stat-card">
+        <p class="stat-label">Focus Mode</p>
+        <h3>One Place</h3>
+        <p class="stat-copy">Keep your daily tools organized by group and search.</p>
+      </article>
+      <article class="stat-card">
+        <p class="stat-label">Daily Goal</p>
+        <h3>Less Friction</h3>
+        <p class="stat-copy">Start work with fewer clicks and better momentum.</p>
+      </article>
+    </section>
+
     <section>
       <div id="container" class="groups" aria-live="polite"></div>
     </section>
 
     <section class="about" id="about">
-      <h2>About This Project</h2>
+      <h2>About This Project ✨</h2>
+      <p class="about-intro">
+        ShortcutHub is now told as a full journey on the dedicated About page. Here is the short version.
+      </p>
       <div class="about-grid">
         <article>
-          <h3>Idea</h3>
+          <h3>💡 Idea</h3>
           <p>
-            This start page was planned to replace a messy bookmark bar with a focused dashboard that opens daily tools instantly.
+            Turn everyday tab chaos into one personal command center where your most-used tools are always one click away.
           </p>
         </article>
         <article>
-          <h3>Problem</h3>
+          <h3>😵 Problem</h3>
           <p>
-            Most browsers make important links hard to organize, hard to edit, and hard to personalize without heavy extensions.
+            Bookmarks become crowded fast. Important links get buried, focus breaks, and starting work feels slower than it should.
           </p>
         </article>
         <article>
-          <h3>Solution</h3>
+          <h3>🚀 Solution</h3>
           <p>
-            ShortcutHub combines quick editing, grouped shortcuts, drag-and-drop ordering, and rich backgrounds in a clean single-page experience.
+            ShortcutHub gives you editable groups, smart settings, media backgrounds, and fast search in one clean launcher.
           </p>
         </article>
       </div>
+      <p class="about-cta-wrap">
+        <a class="btn btn-primary about-cta" href="about.html">Read The Full Story 📖</a>
+      </p>
     </section>
   </main>
 
@@ -160,6 +185,14 @@
 
           <label class="setting-item">Overlay intensity
             <input id="setOverlay" type="range" min="20" max="85" value="56">
+          </label>
+
+          <label class="setting-item">Panel transparency
+            <input id="setSurfaceTransparency" type="range" min="20" max="90" value="62">
+          </label>
+
+          <label class="setting-item">Card opacity
+            <input id="setTileOpacity" type="range" min="25" max="100" value="72">
           </label>
 
           <label class="setting-item">Tile density
@@ -326,6 +359,21 @@
       </p>
       <div class="dialog-actions">
         <button id="closeStoryBtn" class="btn btn-primary" value="ok">Start Using ShortcutHub</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="firstTimeDialog" class="dialog">
+    <form method="dialog" class="story-form">
+      <h3>Welcome to ShortcutHub 👋</h3>
+      <p>
+        <strong id="firstTimeGreeting">Good day</strong>, this is your first launch. Everything is ready for a focused start.
+      </p>
+      <p>
+        Add your favorite links, tune your layout from Settings, and make this page truly yours.
+      </p>
+      <div class="dialog-actions">
+        <button id="closeFirstTimeBtn" class="btn btn-primary" value="ok">Let us begin</button>
       </div>
     </form>
   </dialog>

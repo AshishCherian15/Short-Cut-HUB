@@ -1,5 +1,6 @@
 const STORAGE_KEY = "shortcuthub_data_v5";
 const FIRST_STORY_KEY = "shortcuthub_story_seen_v1";
+const FIRST_WELCOME_KEY = "shortcuthub_first_welcome_seen_v1";
 const DEFAULT_CREATOR_PHOTO = "https://github.com/AshishCherian15.png";
 
 const DEFAULT_SHORTCUTS = [
@@ -25,6 +26,8 @@ const DEFAULT_SETTINGS = {
   customSearchUrl: "",
   accent: "#3de0d0",
   overlay: 56,
+  surfaceTransparency: 62,
+  tileOpacity: 72,
   showClock: true,
   showAbout: true,
   showFooter: true,
@@ -76,6 +79,8 @@ const refs = {
   creatorName: document.getElementById("creatorName"),
   creatorPhoto: document.getElementById("creatorPhoto"),
   creatorChip: document.getElementById("creatorChip"),
+  welcomeLine: document.getElementById("welcomeLine"),
+  heroName: document.getElementById("heroName"),
 
   shortcutDialog: document.getElementById("shortcutDialog"),
   shortcutForm: document.getElementById("shortcutForm"),
@@ -111,6 +116,8 @@ const refs = {
   setCustomSearchUrl: document.getElementById("setCustomSearchUrl"),
   setAccent: document.getElementById("setAccent"),
   setOverlay: document.getElementById("setOverlay"),
+  setSurfaceTransparency: document.getElementById("setSurfaceTransparency"),
+  setTileOpacity: document.getElementById("setTileOpacity"),
   setShowClock: document.getElementById("setShowClock"),
   setShowAbout: document.getElementById("setShowAbout"),
   setShowFooter: document.getElementById("setShowFooter"),
@@ -125,6 +132,10 @@ const refs = {
   storyDialog: document.getElementById("storyDialog"),
   closeStoryBtn: document.getElementById("closeStoryBtn"),
   storyPhoto: document.getElementById("storyPhoto"),
+
+  firstTimeDialog: document.getElementById("firstTimeDialog"),
+  firstTimeGreeting: document.getElementById("firstTimeGreeting"),
+  closeFirstTimeBtn: document.getElementById("closeFirstTimeBtn"),
 
   bgImage: document.getElementById("bgImage"),
   bgVideo: document.getElementById("bgVideo"),
@@ -351,7 +362,10 @@ function applyBackground() {
 }
 
 function applyCreatorProfile() {
-  refs.creatorName.textContent = state.settings.creatorName || "Ashish Cherian";
+  const name = state.settings.creatorName || "Ashish Cherian";
+  refs.creatorName.textContent = name;
+  refs.heroName.textContent = name;
+  refs.welcomeLine.textContent = `Welcome, ${name}.`;
   const photo = state.settings.creatorPhoto || DEFAULT_CREATOR_PHOTO;
   refs.creatorPhoto.src = photo;
   refs.storyPhoto.src = photo;
@@ -370,6 +384,16 @@ function applySettingsToUI() {
   document.documentElement.style.setProperty("--accent", state.settings.accent || DEFAULT_SETTINGS.accent);
   const overlayOpacity = Math.max(20, Math.min(85, Number(state.settings.overlay || DEFAULT_SETTINGS.overlay)));
   document.documentElement.style.setProperty("--overlay-alpha", (overlayOpacity / 100).toFixed(2));
+
+  const surfaceTransparency = Math.max(20, Math.min(90, Number(state.settings.surfaceTransparency || DEFAULT_SETTINGS.surfaceTransparency)));
+  const surfaceAlpha = surfaceTransparency / 100;
+  document.documentElement.style.setProperty("--glass", `rgba(255, 255, 255, ${surfaceAlpha.toFixed(2)})`);
+
+  const tileOpacity = Math.max(25, Math.min(100, Number(state.settings.tileOpacity || DEFAULT_SETTINGS.tileOpacity)));
+  const tileAlpha = tileOpacity / 100;
+  const tileAlphaLight = Math.min(0.98, tileAlpha + 0.26);
+  document.documentElement.style.setProperty("--tile-alpha", tileAlpha.toFixed(2));
+  document.documentElement.style.setProperty("--tile-alpha-light", tileAlphaLight.toFixed(2));
 
   applyMediaAudioPreferences();
   applyCreatorProfile();
@@ -685,6 +709,8 @@ function syncSettingsForm() {
   refs.setCustomSearchUrl.value = state.settings.customSearchUrl;
   refs.setAccent.value = state.settings.accent;
   refs.setOverlay.value = String(state.settings.overlay);
+  refs.setSurfaceTransparency.value = String(state.settings.surfaceTransparency);
+  refs.setTileOpacity.value = String(state.settings.tileOpacity);
   refs.setShowClock.value = state.settings.showClock ? "on" : "off";
   refs.setShowAbout.value = state.settings.showAbout ? "on" : "off";
   refs.setShowFooter.value = state.settings.showFooter ? "on" : "off";
@@ -740,6 +766,8 @@ function submitSettings(event) {
     customSearchUrl: customUrl,
     accent: refs.setAccent.value,
     overlay: Number(refs.setOverlay.value),
+    surfaceTransparency: Number(refs.setSurfaceTransparency.value),
+    tileOpacity: Number(refs.setTileOpacity.value),
     showClock: refs.setShowClock.value === "on",
     showAbout: refs.setShowAbout.value === "on",
     showFooter: refs.setShowFooter.value === "on",
@@ -913,6 +941,33 @@ function maybeShowStory() {
   openDialog(refs.storyDialog);
 }
 
+function getTimeGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) {
+    return "Good morning";
+  }
+  if (hour < 17) {
+    return "Good afternoon";
+  }
+  return "Good evening";
+}
+
+function maybeShowFirstTimeMessage() {
+  const seen = localStorage.getItem(FIRST_WELCOME_KEY) === "1";
+  if (seen) {
+    return false;
+  }
+  refs.firstTimeGreeting.textContent = getTimeGreeting();
+  openDialog(refs.firstTimeDialog);
+  return true;
+}
+
+function closeFirstTimeMessage() {
+  localStorage.setItem(FIRST_WELCOME_KEY, "1");
+  closeDialog(refs.firstTimeDialog);
+  maybeShowStory();
+}
+
 function closeStory() {
   localStorage.setItem(FIRST_STORY_KEY, "1");
   closeDialog(refs.storyDialog);
@@ -937,6 +992,7 @@ function keyboardShortcuts(event) {
     closeDialog(refs.backgroundDialog);
     closeDialog(refs.settingsDialog);
     closeDialog(refs.storyDialog);
+    closeDialog(refs.firstTimeDialog);
   }
 }
 
@@ -979,6 +1035,7 @@ function initEvents() {
 
   refs.audioToggle.addEventListener("click", toggleAudioState);
   refs.closeStoryBtn.addEventListener("click", closeStory);
+  refs.closeFirstTimeBtn.addEventListener("click", closeFirstTimeMessage);
 
   refs.bgYoutube.addEventListener("load", () => {
     window.setTimeout(syncYoutubeAudio, 700);
@@ -996,7 +1053,10 @@ function init() {
   setInterval(updateClock, 15000);
   initEvents();
   render();
-  maybeShowStory();
+  const welcomeShown = maybeShowFirstTimeMessage();
+  if (!welcomeShown) {
+    maybeShowStory();
+  }
 }
 
 init();
