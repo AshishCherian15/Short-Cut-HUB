@@ -334,10 +334,14 @@ body.light #search {
 .stat-card {
   border: 1px solid var(--glass-border);
   border-radius: 14px;
-  background: var(--glass);
+  background: rgba(7, 14, 28, var(--tile-alpha));
   backdrop-filter: blur(10px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
   padding: 14px;
+}
+
+body.light .stat-card {
+  background: rgba(255, 255, 255, var(--tile-alpha-light));
 }
 
 .stat-label {
@@ -396,9 +400,13 @@ body.light .btn {
   padding: 14px;
   border: 1px solid var(--glass-border);
   border-radius: 16px;
-  background: var(--glass);
+  background: rgba(7, 14, 28, var(--tile-alpha));
   backdrop-filter: blur(10px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.24);
+}
+
+body.light .group {
+  background: rgba(255, 255, 255, var(--tile-alpha-light));
 }
 
 .group-header {
@@ -764,7 +772,7 @@ body.light .story-form p {
   padding: 8px;
   border-radius: 10px;
   border: 1px solid rgba(110, 138, 186, 0.36);
-  background: rgba(9, 18, 33, var(--tile-alpha));
+  background: rgba(7, 14, 28, var(--tile-alpha));
 }
 
 body.light .setting-item {
