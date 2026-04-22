@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShortcutHub</title>
+  <meta name="description" content="A practical and beautiful personal start page with editable shortcuts and flexible backgrounds.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <video id="bgVideo" autoplay loop muted playsinline></video>
+  <img id="bgImage" alt="Background image">
+  <iframe id="bgYoutube" title="Background video"></iframe>
+  <div class="backdrop"></div>
+
+  <main class="page-shell">
+    <header class="top-panel">
+      <div>
+        <p class="eyebrow">Your smart start page</p>
+        <h1>ShortcutHub</h1>
+        <p class="tagline">Practical. Fast. Personal. Every important link in one clean place.</p>
+      </div>
+      <div class="clock-wrap">
+        <div id="clock" class="clock">--:--</div>
+        <div id="date" class="date">Loading date...</div>
+      </div>
+    </header>
+
+    <section class="toolbar" aria-label="Controls">
+      <input id="search" type="search" placeholder="Search by name, URL, or group..." autocomplete="off">
+      <div class="toolbar-actions">
+        <button id="addBtn" class="btn btn-primary" type="button">Add Shortcut</button>
+        <button id="bgBtn" class="btn" type="button">Background</button>
+        <button id="themeBtn" class="btn" type="button">Theme</button>
+        <button id="exportBtn" class="btn" type="button">Export</button>
+        <button id="importBtn" class="btn" type="button">Import</button>
+        <input id="importFile" type="file" accept="application/json" hidden>
+      </div>
+    </section>
+
+    <section>
+      <div id="container" class="groups" aria-live="polite"></div>
+    </section>
+
+    <section class="about" id="about">
+      <h2>About This Project</h2>
+      <div class="about-grid">
+        <article>
+          <h3>Idea</h3>
+          <p>
+            This start page was planned to replace a messy bookmark bar with a focused dashboard that opens daily tools instantly.
+          </p>
+        </article>
+        <article>
+          <h3>Problem</h3>
+          <p>
+            Most browsers make important links hard to organize, hard to edit, and hard to personalize without heavy extensions.
+          </p>
+        </article>
+        <article>
+          <h3>Solution</h3>
+          <p>
+            ShortcutHub combines quick editing, grouped shortcuts, drag-and-drop ordering, and rich backgrounds in a clean single-page experience.
+          </p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Built with focus and creativity by Ashish.</p>
+  </footer>
+
+  <dialog id="shortcutDialog" class="dialog">
+    <form id="shortcutForm" method="dialog">
+      <h3 id="dialogTitle">Add Shortcut</h3>
+      <label>Name</label>
+      <input id="name" required maxlength="40" placeholder="Example: YouTube">
+      <label>URL</label>
+      <input id="url" required placeholder="https://example.com">
+      <label>Group</label>
+      <input id="group" maxlength="30" placeholder="Work, Social, AI...">
+      <label>Custom icon URL (optional)</label>
+      <input id="icon" placeholder="https://example.com/icon.png">
+      <div class="dialog-actions">
+        <button class="btn" type="button" id="cancelDialog">Cancel</button>
+        <button class="btn btn-primary" type="submit">Save Shortcut</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="backgroundDialog" class="dialog">
+    <form id="backgroundForm" method="dialog">
+      <h3>Set Background</h3>
+      <label>Type</label>
+      <select id="bgType">
+        <option value="image">Image URL</option>
+        <option value="video">Video URL</option>
+        <option value="youtube">YouTube URL</option>
+      </select>
+      <label>Source URL</label>
+      <input id="bgSource" placeholder="Paste image, video, or YouTube link">
+      <p class="hint">Tip: for YouTube, paste a normal watch URL or youtu.be link.</p>
+      <div class="dialog-actions">
+        <button class="btn" type="button" id="cancelBackground">Cancel</button>
+        <button class="btn btn-primary" type="submit">Apply Background</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
