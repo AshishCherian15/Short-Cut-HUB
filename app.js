@@ -4,7 +4,7 @@ const FIRST_WELCOME_KEY = "shortcuthub_first_welcome_seen_v1";
 const DEFAULT_CREATOR_PHOTO = "https://github.com/AshishCherian15.png";
 const DEFAULT_BACKGROUND = {
   type: "video",
-  src: "/space-drive.webm",
+  src: "https://raw.githubusercontent.com/AshishCherian15/Short-Cut-HUB/main/space-drive.webm",
   sourceKind: "url"
 };
 
@@ -145,6 +145,13 @@ function normalizeBackgroundSource(value) {
   const trimmed = String(value || "").trim();
   if (!trimmed) {
     return "";
+  }
+
+  // Convert GitHub blob links to raw file links so browser can play media directly.
+  const blobMatch = trimmed.match(/^https?:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/(.+)$/i);
+  if (blobMatch) {
+    const [, owner, repo, branch, path] = blobMatch;
+    return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}`;
   }
 
   // Keep already-valid absolute, root-relative, and browser-managed sources.
