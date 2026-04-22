@@ -12,7 +12,7 @@ Live demo: add your link here later.
 
 Example placeholder:
 
-- https://your-live-demo-link-here
+- [https://your-live-demo-link-here](https://short-cut-hub.vercel.app/)
 
 ## The Story Behind It
 
