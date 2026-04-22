@@ -73,16 +73,70 @@ Use either:
 
 Open the folder in VS Code.
 
-### 3. Run locally
+### 3. Run locally in any browser
 
 No install required.
 
-You can open index.html directly in your browser.
+You can open index.html directly in any modern browser:
+
+- Google Chrome
+- Microsoft Edge
+- Firefox
+- Brave
 
 For best behavior in development, use a local static server (optional):
 
 - VS Code Live Server extension
 - Any local server command you already use
+
+## Offline Setup for All Users
+
+If you want everyone to use this fully offline with their own saved data:
+
+1. Share a ZIP that includes at least these files:
+  - index.html
+  - styles.css
+  - app.js
+  - about.html
+2. Each user extracts the ZIP on their own computer.
+3. Each user opens index.html in their own browser.
+
+How storage works offline:
+
+- ShortcutHub uses browser localStorage.
+- Storage is per browser profile and per device.
+- One user's shortcuts/settings do not affect another user.
+- Clearing site data/local storage in that browser will reset saved data.
+
+## Deploy on Vercel (Creator Setup)
+
+This project is static and works perfectly on Vercel.
+
+### Option A: Deploy from GitHub (recommended)
+
+1. Push your latest code to GitHub.
+2. Go to vercel.com and sign in.
+3. Click Add New Project.
+4. Import your repository.
+5. Framework preset: Other.
+6. Build command: leave empty.
+7. Output directory: leave empty.
+8. Click Deploy.
+
+### Option B: Deploy using Vercel CLI
+
+1. Install CLI:
+  - npm i -g vercel
+2. In project folder, run:
+  - vercel
+3. For production deployment, run:
+  - vercel --prod
+
+After deployment:
+
+- Vercel gives you a live URL.
+- Every visitor gets their own browser localStorage.
+- Import/Export backup still works per user.
 
 ## How to Use
 
@@ -139,13 +193,20 @@ Click Export to download a JSON backup.
 
 ShortcutHub stores data in browser localStorage under:
 
-- shortcuthub_data_v2
+- shortcuthub_data_v5
 
 Stored fields include:
 
 - shortcuts
 - theme
 - background
+- settings
+
+Default experience for new users:
+
+- Background: YouTube video https://youtu.be/kf4MH987TrI?si=h64zyfxgZIjPlmDy
+- Background audio: enabled
+- Default audio volume: 50%
 
 ## Customization Guide
 

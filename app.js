@@ -2,6 +2,11 @@ const STORAGE_KEY = "shortcuthub_data_v5";
 const FIRST_STORY_KEY = "shortcuthub_story_seen_v1";
 const FIRST_WELCOME_KEY = "shortcuthub_first_welcome_seen_v1";
 const DEFAULT_CREATOR_PHOTO = "https://github.com/AshishCherian15.png";
+const DEFAULT_BACKGROUND = {
+  type: "youtube",
+  src: "https://youtu.be/kf4MH987TrI?si=h64zyfxgZIjPlmDy",
+  sourceKind: "url"
+};
 
 const DEFAULT_SHORTCUTS = [
   { name: "YouTube", url: "https://www.youtube.com", group: "Daily", icon: "" },
@@ -31,9 +36,9 @@ const DEFAULT_SETTINGS = {
   showClock: true,
   showAbout: true,
   showFooter: true,
-  bgAudio: false,
-  bgMuted: true,
-  audioVolume: 65,
+  bgAudio: true,
+  bgMuted: false,
+  audioVolume: 50,
   creatorName: "Ashish Cherian",
   creatorPhoto: DEFAULT_CREATOR_PHOTO
 };
@@ -49,11 +54,7 @@ const state = {
   shortcuts: [],
   editIndex: null,
   theme: "dark",
-  background: {
-    type: "image",
-    src: "",
-    sourceKind: "url"
-  },
+  background: { ...DEFAULT_BACKGROUND },
   settings: { ...DEFAULT_SETTINGS }
 };
 
@@ -240,7 +241,7 @@ function loadState() {
   if (!raw) {
     state.shortcuts = [...DEFAULT_SHORTCUTS];
     state.theme = "dark";
-    state.background = { type: "image", src: "", sourceKind: "url" };
+    state.background = { ...DEFAULT_BACKGROUND };
     state.settings = { ...DEFAULT_SETTINGS };
     saveState();
     return;
@@ -252,11 +253,11 @@ function loadState() {
     state.theme = parsed.theme === "light" ? "light" : "dark";
     state.background = parsed.background && typeof parsed.background === "object"
       ? {
-        type: parsed.background.type || "image",
-        src: parsed.background.src || "",
+        type: parsed.background.type || DEFAULT_BACKGROUND.type,
+        src: parsed.background.src || DEFAULT_BACKGROUND.src,
         sourceKind: parsed.background.sourceKind || "url"
       }
-      : { type: "image", src: "", sourceKind: "url" };
+      : { ...DEFAULT_BACKGROUND };
     state.settings = {
       ...DEFAULT_SETTINGS,
       ...(parsed.settings && typeof parsed.settings === "object" ? parsed.settings : {})
@@ -264,7 +265,7 @@ function loadState() {
   } catch {
     state.shortcuts = [...DEFAULT_SHORTCUTS];
     state.theme = "dark";
-    state.background = { type: "image", src: "", sourceKind: "url" };
+    state.background = { ...DEFAULT_BACKGROUND };
     state.settings = { ...DEFAULT_SETTINGS };
     saveState();
   }
@@ -793,7 +794,7 @@ function resetDefaults() {
 
   state.settings = { ...DEFAULT_SETTINGS };
   state.theme = "dark";
-  state.background = { type: "image", src: "", sourceKind: "url" };
+  state.background = { ...DEFAULT_BACKGROUND };
   refs.bgYoutube.src = "";
   refs.bgVideo.src = "";
   refs.bgImage.src = "";
@@ -841,11 +842,11 @@ function importData(event) {
       state.theme = parsed.theme === "light" ? "light" : "dark";
       state.background = parsed.background && typeof parsed.background === "object"
         ? {
-          type: parsed.background.type || "image",
-          src: parsed.background.src || "",
+          type: parsed.background.type || DEFAULT_BACKGROUND.type,
+          src: parsed.background.src || DEFAULT_BACKGROUND.src,
           sourceKind: parsed.background.sourceKind || "url"
         }
-        : { type: "image", src: "", sourceKind: "url" };
+        : { ...DEFAULT_BACKGROUND };
       state.settings = {
         ...DEFAULT_SETTINGS,
         ...(parsed.settings && typeof parsed.settings === "object" ? parsed.settings : {}),
