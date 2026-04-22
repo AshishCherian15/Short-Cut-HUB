@@ -1,5 +1,6 @@
-const STORAGE_KEY = "shortcuthub_data_v4";
+const STORAGE_KEY = "shortcuthub_data_v5";
 const FIRST_STORY_KEY = "shortcuthub_story_seen_v1";
+const DEFAULT_CREATOR_PHOTO = "https://github.com/AshishCherian15.png";
 
 const DEFAULT_SHORTCUTS = [
   { name: "YouTube", url: "https://www.youtube.com", group: "Daily", icon: "" },
@@ -28,9 +29,10 @@ const DEFAULT_SETTINGS = {
   showAbout: true,
   showFooter: true,
   bgAudio: false,
+  bgMuted: true,
   audioVolume: 65,
-  creatorName: "Ashish",
-  creatorPhoto: ""
+  creatorName: "Ashish Cherian",
+  creatorPhoto: DEFAULT_CREATOR_PHOTO
 };
 
 const SEARCH_ENGINES = {
@@ -63,7 +65,6 @@ const refs = {
   audioToggle: document.getElementById("audioToggle"),
 
   brandBtn: document.getElementById("brandBtn"),
-  aboutBtn: document.getElementById("aboutBtn"),
   addBtn: document.getElementById("addBtn"),
   settingsBtn: document.getElementById("settingsBtn"),
   bgBtn: document.getElementById("bgBtn"),
@@ -97,6 +98,9 @@ const refs = {
   settingsForm: document.getElementById("settingsForm"),
   cancelSettings: document.getElementById("cancelSettings"),
   resetDefaultsBtn: document.getElementById("resetDefaultsBtn"),
+  tabButtons: Array.from(document.querySelectorAll(".tab-btn")),
+  tabPanes: Array.from(document.querySelectorAll(".settings-pane")),
+
   setEditMode: document.getElementById("setEditMode"),
   setOpenMode: document.getElementById("setOpenMode"),
   setConfirmDelete: document.getElementById("setConfirmDelete"),
@@ -111,6 +115,7 @@ const refs = {
   setShowAbout: document.getElementById("setShowAbout"),
   setShowFooter: document.getElementById("setShowFooter"),
   setBgAudio: document.getElementById("setBgAudio"),
+  setBgMuted: document.getElementById("setBgMuted"),
   setAudioVolume: document.getElementById("setAudioVolume"),
   setCreatorName: document.getElementById("setCreatorName"),
   setCreatorPhoto: document.getElementById("setCreatorPhoto"),
@@ -119,6 +124,7 @@ const refs = {
 
   storyDialog: document.getElementById("storyDialog"),
   closeStoryBtn: document.getElementById("closeStoryBtn"),
+  storyPhoto: document.getElementById("storyPhoto"),
 
   bgImage: document.getElementById("bgImage"),
   bgVideo: document.getElementById("bgVideo"),
@@ -169,6 +175,17 @@ function getYoutubeId(url) {
   }
 }
 
+function detectBackgroundType(src) {
+  const value = String(src || "").toLowerCase();
+  if (value.includes("youtube.com") || value.includes("youtu.be")) {
+    return "youtube";
+  }
+  if (/\.(mp4|webm|ogg)(\?|$)/i.test(value)) {
+    return "video";
+  }
+  return "image";
+}
+
 function openDialog(dialog) {
   if (!dialog) {
     return;
@@ -191,11 +208,18 @@ function closeDialog(dialog) {
   dialog.removeAttribute("open");
 }
 
+function serializableBackground() {
+  if (state.background.sourceKind === "upload") {
+    return { type: "image", src: "", sourceKind: "url" };
+  }
+  return state.background;
+}
+
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({
     shortcuts: state.shortcuts,
     theme: state.theme,
-    background: state.background,
+    background: serializableBackground(),
     settings: state.settings
   }));
 }
@@ -239,15 +263,44 @@ function applyTheme() {
   document.body.classList.toggle("light", state.theme === "light");
 }
 
+function sendYoutubeCommand(func, args = []) {
+  if (!refs.bgYoutube.contentWindow) {
+    return;
+  }
+  refs.bgYoutube.contentWindow.postMessage(JSON.stringify({
+    event: "command",
+    func,
+    args
+  }), "*");
+}
+
+function syncYoutubeAudio() {
+  if (state.background.type !== "youtube") {
+    return;
+  }
+
+  const volume = Math.max(0, Math.min(100, Number(state.settings.audioVolume || 0)));
+  sendYoutubeCommand("setVolume", [volume]);
+
+  if (!state.settings.bgAudio || state.settings.bgMuted) {
+    sendYoutubeCommand("mute", []);
+  } else {
+    sendYoutubeCommand("unMute", []);
+  }
+}
+
 function applyMediaAudioPreferences() {
   const volume = Math.max(0, Math.min(1, Number(state.settings.audioVolume || 0) / 100));
   const allowAudio = !!state.settings.bgAudio;
+  const muted = !allowAudio || !!state.settings.bgMuted;
 
   refs.bgVideo.volume = volume;
-  refs.bgVideo.muted = !allowAudio;
+  refs.bgVideo.muted = muted;
 
   refs.audioToggle.classList.toggle("hidden", !allowAudio);
-  refs.audioToggle.textContent = refs.bgVideo.muted ? "Play Audio" : "Audio On";
+  refs.audioToggle.textContent = muted ? "Unmute" : "Mute";
+
+  syncYoutubeAudio();
 }
 
 function buildYoutubeEmbedUrl(src) {
@@ -255,8 +308,8 @@ function buildYoutubeEmbedUrl(src) {
   if (!id) {
     return "";
   }
-  const mute = state.settings.bgAudio ? "0" : "1";
-  return `https://www.youtube.com/embed/${id}?autoplay=1&mute=${mute}&controls=0&loop=1&playlist=${id}&playsinline=1`;
+  const mute = !state.settings.bgAudio || state.settings.bgMuted ? "1" : "0";
+  return `https://www.youtube.com/embed/${id}?autoplay=1&mute=${mute}&controls=0&loop=1&playlist=${id}&playsinline=1&enablejsapi=1`;
 }
 
 function applyBackground() {
@@ -276,7 +329,7 @@ function applyBackground() {
     }
     bgYoutube.src = embedUrl;
     bgYoutube.style.display = "block";
-    applyMediaAudioPreferences();
+    window.setTimeout(syncYoutubeAudio, 900);
     return;
   }
 
@@ -287,7 +340,7 @@ function applyBackground() {
     const playPromise = bgVideo.play();
     if (playPromise && typeof playPromise.catch === "function") {
       playPromise.catch(() => {
-        refs.audioToggle.textContent = "Tap to Enable Audio";
+        refs.audioToggle.textContent = "Tap for Audio";
       });
     }
     return;
@@ -298,13 +351,10 @@ function applyBackground() {
 }
 
 function applyCreatorProfile() {
-  refs.creatorName.textContent = state.settings.creatorName || "Ashish";
-  const hasPhoto = !!state.settings.creatorPhoto;
-  if (hasPhoto) {
-    refs.creatorPhoto.src = state.settings.creatorPhoto;
-  } else {
-    refs.creatorPhoto.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop stop-color='%233de0d0'/><stop offset='1' stop-color='%233b82f6'/></linearGradient></defs><rect width='80' height='80' fill='url(%23g)'/><text x='40' y='48' text-anchor='middle' font-size='30' fill='white' font-family='Arial'>A</text></svg>";
-  }
+  refs.creatorName.textContent = state.settings.creatorName || "Ashish Cherian";
+  const photo = state.settings.creatorPhoto || DEFAULT_CREATOR_PHOTO;
+  refs.creatorPhoto.src = photo;
+  refs.storyPhoto.src = photo;
 }
 
 function applySettingsToUI() {
@@ -568,7 +618,7 @@ function toggleTheme() {
 }
 
 function openBackgroundDialog() {
-  refs.bgType.value = state.background.type;
+  refs.bgType.value = state.background.type || "auto";
   refs.bgSource.value = state.background.sourceKind === "url" ? state.background.src : "";
   refs.bgUpload.value = "";
   openDialog(refs.backgroundDialog);
@@ -590,7 +640,7 @@ function clearBackground() {
 
 function submitBackground(event) {
   event.preventDefault();
-  const type = refs.bgType.value;
+  const typeChoice = refs.bgType.value;
   const upload = refs.bgUpload.files && refs.bgUpload.files[0];
 
   if (upload) {
@@ -605,15 +655,17 @@ function submitBackground(event) {
     return;
   }
 
-  const src = refs.bgSource.value.trim();
-  if (src && !isValidUrl(normalizeUrl(src))) {
+  const src = normalizeUrl(refs.bgSource.value.trim());
+  if (src && !isValidUrl(src)) {
     alert("Please use a valid background URL.");
     return;
   }
 
+  const resolvedType = typeChoice === "auto" ? detectBackgroundType(src) : typeChoice;
+
   state.background = {
-    type,
-    src: normalizeUrl(src),
+    type: resolvedType,
+    src,
     sourceKind: "url"
   };
 
@@ -637,13 +689,24 @@ function syncSettingsForm() {
   refs.setShowAbout.value = state.settings.showAbout ? "on" : "off";
   refs.setShowFooter.value = state.settings.showFooter ? "on" : "off";
   refs.setBgAudio.value = state.settings.bgAudio ? "on" : "off";
+  refs.setBgMuted.value = state.settings.bgMuted ? "on" : "off";
   refs.setAudioVolume.value = String(state.settings.audioVolume);
   refs.setCreatorName.value = state.settings.creatorName;
   refs.setCreatorPhoto.value = state.settings.creatorPhoto;
 }
 
+function activateSettingsTab(tab) {
+  refs.tabButtons.forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.tab === tab);
+  });
+  refs.tabPanes.forEach((pane) => {
+    pane.classList.toggle("active", pane.dataset.pane === tab);
+  });
+}
+
 function openSettingsDialog() {
   syncSettingsForm();
+  activateSettingsTab("appearance");
   openDialog(refs.settingsDialog);
 }
 
@@ -681,9 +744,10 @@ function submitSettings(event) {
     showAbout: refs.setShowAbout.value === "on",
     showFooter: refs.setShowFooter.value === "on",
     bgAudio: refs.setBgAudio.value === "on",
+    bgMuted: refs.setBgMuted.value === "on",
     audioVolume: Number(refs.setAudioVolume.value),
-    creatorName: safeText(refs.setCreatorName.value.trim()) || "Ashish",
-    creatorPhoto
+    creatorName: safeText(refs.setCreatorName.value.trim()) || "Ashish Cherian",
+    creatorPhoto: creatorPhoto || DEFAULT_CREATOR_PHOTO
   };
 
   applySettingsToUI();
@@ -719,7 +783,7 @@ function exportData() {
     JSON.stringify({
       shortcuts: state.shortcuts,
       theme: state.theme,
-      background: state.background,
+      background: serializableBackground(),
       settings: state.settings
     }, null, 2)
   ], { type: "application/json" });
@@ -756,7 +820,8 @@ function importData(event) {
         : { type: "image", src: "", sourceKind: "url" };
       state.settings = {
         ...DEFAULT_SETTINGS,
-        ...(parsed.settings && typeof parsed.settings === "object" ? parsed.settings : {})
+        ...(parsed.settings && typeof parsed.settings === "object" ? parsed.settings : {}),
+        creatorPhoto: parsed.settings && parsed.settings.creatorPhoto ? parsed.settings.creatorPhoto : DEFAULT_CREATOR_PHOTO
       };
 
       applyTheme();
@@ -813,11 +878,15 @@ function maybeSearchWeb(event) {
   }
 }
 
-function enableAudio() {
-  state.settings.bgAudio = true;
-  refs.bgVideo.muted = false;
-  refs.bgVideo.volume = Math.max(0, Math.min(1, Number(state.settings.audioVolume) / 100));
-  applyBackground();
+function toggleAudioState() {
+  if (!state.settings.bgAudio) {
+    state.settings.bgAudio = true;
+    state.settings.bgMuted = false;
+  } else {
+    state.settings.bgMuted = !state.settings.bgMuted;
+  }
+  applyMediaAudioPreferences();
+  syncYoutubeAudio();
   saveState();
 }
 
@@ -828,7 +897,7 @@ function uploadCreatorPhoto(event) {
   }
   const reader = new FileReader();
   reader.onload = () => {
-    state.settings.creatorPhoto = String(reader.result || "");
+    state.settings.creatorPhoto = String(reader.result || DEFAULT_CREATOR_PHOTO);
     refs.setCreatorPhoto.value = state.settings.creatorPhoto;
     applyCreatorProfile();
     saveState();
@@ -858,7 +927,7 @@ function keyboardShortcuts(event) {
     openShortcutDialog();
   }
 
-  if (!typing && event.key === "/") {
+  if (!typing && event.key.toLowerCase() === "s") {
     event.preventDefault();
     refs.search.focus();
   }
@@ -876,8 +945,9 @@ function initEvents() {
   refs.search.addEventListener("keydown", maybeSearchWeb);
 
   refs.brandBtn.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
-  refs.aboutBtn.addEventListener("click", () => refs.about.scrollIntoView({ behavior: "smooth" }));
-  refs.creatorChip.addEventListener("click", () => refs.about.scrollIntoView({ behavior: "smooth" }));
+  refs.creatorChip.addEventListener("click", () => {
+    window.location.href = "about.html";
+  });
 
   refs.addBtn.addEventListener("click", () => openShortcutDialog());
   refs.settingsBtn.addEventListener("click", openSettingsDialog);
@@ -898,11 +968,21 @@ function initEvents() {
   refs.cancelSettings.addEventListener("click", closeSettingsDialog);
   refs.resetDefaultsBtn.addEventListener("click", resetDefaults);
 
+  refs.tabButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      activateSettingsTab(btn.dataset.tab);
+    });
+  });
+
   refs.uploadCreatorBtn.addEventListener("click", () => refs.creatorPhotoUpload.click());
   refs.creatorPhotoUpload.addEventListener("change", uploadCreatorPhoto);
 
-  refs.audioToggle.addEventListener("click", enableAudio);
+  refs.audioToggle.addEventListener("click", toggleAudioState);
   refs.closeStoryBtn.addEventListener("click", closeStory);
+
+  refs.bgYoutube.addEventListener("load", () => {
+    window.setTimeout(syncYoutubeAudio, 700);
+  });
 
   document.addEventListener("keydown", keyboardShortcuts);
 }

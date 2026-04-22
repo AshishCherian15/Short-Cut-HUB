@@ -25,7 +25,7 @@
       </div>
 
       <div class="appbar-actions">
-        <button id="aboutBtn" class="btn" type="button">About</button>
+        <a id="aboutBtn" class="btn about-link" href="about.html">About</a>
         <button id="addBtn" class="btn btn-primary" type="button">Add Shortcut</button>
         <button id="bgBtn" class="btn" type="button">Background</button>
         <button id="settingsBtn" class="btn" type="button">Settings</button>
@@ -62,7 +62,7 @@
 
     <section class="quick-tips" aria-label="Usage tips">
       <p>
-        Tip: press <strong>N</strong> to add shortcut, <strong>/</strong> to focus search, and use the Settings panel for NightTab-inspired options.
+        Tip: press <strong>N</strong> to add shortcut, <strong>S</strong> to focus search, and use the Settings panel for all options.
       </p>
     </section>
 
@@ -122,6 +122,7 @@
       <h3>Set Background</h3>
       <label>Type</label>
       <select id="bgType">
+        <option value="auto">Auto detect (recommended)</option>
         <option value="image">Image URL</option>
         <option value="video">Video URL</option>
         <option value="youtube">YouTube URL</option>
@@ -142,120 +143,148 @@
   <dialog id="settingsDialog" class="dialog settings-dialog">
     <form id="settingsForm" method="dialog">
       <h3>ShortcutHub Settings</h3>
-      <p class="hint">Inspired by NightTab style controls: appearance, layout, behavior, and data safety.</p>
+      <p class="hint">Tabbed setup for faster configuration and comfort.</p>
 
-      <div class="settings-grid">
-        <label class="setting-item">Edit mode
-          <select id="setEditMode">
-            <option value="on">On</option>
-            <option value="off">Off</option>
-          </select>
-        </label>
-
-        <label class="setting-item">Open links
-          <select id="setOpenMode">
-            <option value="new">In new tab</option>
-            <option value="same">In same tab</option>
-          </select>
-        </label>
-
-        <label class="setting-item">Delete confirmation
-          <select id="setConfirmDelete">
-            <option value="on">On</option>
-            <option value="off">Off</option>
-          </select>
-        </label>
-
-        <label class="setting-item">Group sorting
-          <select id="setGroupSort">
-            <option value="az">A to Z</option>
-            <option value="manual">Manual order</option>
-          </select>
-        </label>
-
-        <label class="setting-item">Tile density
-          <select id="setTileSize">
-            <option value="compact">Compact</option>
-            <option value="comfortable">Comfortable</option>
-            <option value="large">Large</option>
-          </select>
-        </label>
-
-        <label class="setting-item">Card style
-          <select id="setCardStyle">
-            <option value="glass">Glass</option>
-            <option value="solid">Solid</option>
-          </select>
-        </label>
-
-        <label class="setting-item">Search engine
-          <select id="setSearchEngine">
-            <option value="google">Google</option>
-            <option value="bing">Bing</option>
-            <option value="duckduckgo">DuckDuckGo</option>
-            <option value="brave">Brave</option>
-            <option value="custom">Custom</option>
-          </select>
-        </label>
-
-        <label class="setting-item">Custom search URL
-          <input id="setCustomSearchUrl" placeholder="https://example.com/search?q=%s">
-        </label>
-
-        <label class="setting-item">Accent color
-          <input id="setAccent" type="color" value="#3de0d0">
-        </label>
-
-        <label class="setting-item">Overlay intensity
-          <input id="setOverlay" type="range" min="20" max="85" value="56">
-        </label>
-
-        <label class="setting-item">Show clock
-          <select id="setShowClock">
-            <option value="on">On</option>
-            <option value="off">Off</option>
-          </select>
-        </label>
-
-        <label class="setting-item">Show about section
-          <select id="setShowAbout">
-            <option value="on">On</option>
-            <option value="off">Off</option>
-          </select>
-        </label>
-
-        <label class="setting-item">Show footer
-          <select id="setShowFooter">
-            <option value="on">On</option>
-            <option value="off">Off</option>
-          </select>
-        </label>
-
-        <label class="setting-item">Background audio
-          <select id="setBgAudio">
-            <option value="off">Off</option>
-            <option value="on">On</option>
-          </select>
-        </label>
-
-        <label class="setting-item">Audio volume
-          <input id="setAudioVolume" type="range" min="0" max="100" value="65">
-        </label>
-
-        <label class="setting-item">Creator name
-          <input id="setCreatorName" placeholder="Your name">
-        </label>
-
-        <label class="setting-item">Creator photo URL
-          <input id="setCreatorPhoto" placeholder="https://example.com/me.jpg">
-        </label>
-
-        <div class="setting-item">
-          <span>Creator photo from device</span>
-          <button id="uploadCreatorBtn" class="btn" type="button">Upload Photo</button>
-          <input id="creatorPhotoUpload" type="file" accept="image/*" hidden>
-        </div>
+      <div class="settings-tabs" role="tablist" aria-label="Settings tabs">
+        <button class="tab-btn active" type="button" data-tab="appearance">Appearance</button>
+        <button class="tab-btn" type="button" data-tab="behavior">Behavior</button>
+        <button class="tab-btn" type="button" data-tab="background">Background and Audio</button>
+        <button class="tab-btn" type="button" data-tab="profile">Profile and Data</button>
       </div>
+
+      <section class="settings-pane active" data-pane="appearance">
+        <div class="settings-grid">
+          <label class="setting-item">Accent color
+            <input id="setAccent" type="color" value="#3de0d0">
+          </label>
+
+          <label class="setting-item">Overlay intensity
+            <input id="setOverlay" type="range" min="20" max="85" value="56">
+          </label>
+
+          <label class="setting-item">Tile density
+            <select id="setTileSize">
+              <option value="compact">Compact</option>
+              <option value="comfortable">Comfortable</option>
+              <option value="large">Large</option>
+            </select>
+          </label>
+
+          <label class="setting-item">Card style
+            <select id="setCardStyle">
+              <option value="glass">Glass</option>
+              <option value="solid">Solid</option>
+            </select>
+          </label>
+
+          <label class="setting-item">Show clock
+            <select id="setShowClock">
+              <option value="on">On</option>
+              <option value="off">Off</option>
+            </select>
+          </label>
+
+          <label class="setting-item">Show footer
+            <select id="setShowFooter">
+              <option value="on">On</option>
+              <option value="off">Off</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <section class="settings-pane" data-pane="behavior">
+        <div class="settings-grid">
+          <label class="setting-item">Edit mode
+            <select id="setEditMode">
+              <option value="on">On</option>
+              <option value="off">Off</option>
+            </select>
+          </label>
+
+          <label class="setting-item">Open links
+            <select id="setOpenMode">
+              <option value="new">In new tab</option>
+              <option value="same">In same tab</option>
+            </select>
+          </label>
+
+          <label class="setting-item">Delete confirmation
+            <select id="setConfirmDelete">
+              <option value="on">On</option>
+              <option value="off">Off</option>
+            </select>
+          </label>
+
+          <label class="setting-item">Group sorting
+            <select id="setGroupSort">
+              <option value="az">A to Z</option>
+              <option value="manual">Manual order</option>
+            </select>
+          </label>
+
+          <label class="setting-item">Search engine
+            <select id="setSearchEngine">
+              <option value="google">Google</option>
+              <option value="bing">Bing</option>
+              <option value="duckduckgo">DuckDuckGo</option>
+              <option value="brave">Brave</option>
+              <option value="custom">Custom</option>
+            </select>
+          </label>
+
+          <label class="setting-item">Custom search URL
+            <input id="setCustomSearchUrl" placeholder="https://example.com/search?q=%s">
+          </label>
+
+          <label class="setting-item">Show about section
+            <select id="setShowAbout">
+              <option value="on">On</option>
+              <option value="off">Off</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <section class="settings-pane" data-pane="background">
+        <div class="settings-grid">
+          <label class="setting-item">Background audio
+            <select id="setBgAudio">
+              <option value="off">Off</option>
+              <option value="on">On</option>
+            </select>
+          </label>
+
+          <label class="setting-item">Mute audio
+            <select id="setBgMuted">
+              <option value="off">Off</option>
+              <option value="on">On</option>
+            </select>
+          </label>
+
+          <label class="setting-item">Audio volume
+            <input id="setAudioVolume" type="range" min="0" max="100" value="65">
+          </label>
+        </div>
+      </section>
+
+      <section class="settings-pane" data-pane="profile">
+        <div class="settings-grid">
+          <label class="setting-item">Creator name
+            <input id="setCreatorName" placeholder="Your name">
+          </label>
+
+          <label class="setting-item">Creator photo URL
+            <input id="setCreatorPhoto" placeholder="https://example.com/me.jpg">
+          </label>
+
+          <div class="setting-item">
+            <span>Creator photo from device</span>
+            <button id="uploadCreatorBtn" class="btn" type="button">Upload Photo</button>
+            <input id="creatorPhotoUpload" type="file" accept="image/*" hidden>
+          </div>
+        </div>
+      </section>
 
       <div class="dialog-actions">
         <button class="btn" type="button" id="resetDefaultsBtn">Reset Defaults</button>
@@ -268,6 +297,17 @@
   <dialog id="storyDialog" class="dialog">
     <form method="dialog" class="story-form">
       <h3>The Story Behind ShortcutHub</h3>
+      <div class="story-profile">
+        <img id="storyPhoto" class="story-photo" alt="Creator profile">
+        <div>
+          <strong>Ashish Cherian</strong>
+          <p class="story-links">
+            <a href="https://github.com/AshishCherian15" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span>|</span>
+            <a href="https://www.linkedin.com/in/ashish-cherian-158b49356" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+          </p>
+        </div>
+      </div>
       <p>
         I am Ashish, and this page started from a very practical frustration: every day, I opened the same tools, but they were scattered across tabs, bookmarks, and history.
       </p>

@@ -146,6 +146,12 @@ body {
   gap: 8px;
 }
 
+.about-link {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
 .creator-chip {
   display: flex;
   align-items: center;
@@ -556,10 +562,71 @@ body.light .dialog select {
   width: min(760px, 95vw);
 }
 
+.settings-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.tab-btn {
+  border: 1px solid rgba(112, 140, 186, 0.38);
+  background: rgba(8, 18, 34, 0.46);
+  color: inherit;
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+body.light .tab-btn {
+  background: rgba(255, 255, 255, 0.84);
+}
+
+.tab-btn.active {
+  background: linear-gradient(120deg, var(--accent), #3b82f6);
+  border-color: transparent;
+  color: #fff;
+}
+
+.settings-pane {
+  display: none;
+}
+
+.settings-pane.active {
+  display: block;
+}
+
 .story-form p {
   margin: 0;
   line-height: 1.5;
   color: #cddbf8;
+}
+
+.story-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid rgba(110, 138, 186, 0.36);
+  border-radius: 10px;
+  background: rgba(8, 17, 32, 0.45);
+}
+
+.story-photo {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.38);
+}
+
+.story-links {
+  margin: 2px 0 0;
+}
+
+.story-links a {
+  color: #9fe8de;
 }
 
 body.light .story-form p {
