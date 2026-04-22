@@ -4,7 +4,7 @@ const FIRST_WELCOME_KEY = "shortcuthub_first_welcome_seen_v1";
 const DEFAULT_CREATOR_PHOTO = "https://github.com/AshishCherian15.png";
 const DEFAULT_BACKGROUND = {
   type: "video",
-  src: "space-drive.webm",
+  src: "/space-drive.webm",
   sourceKind: "url"
 };
 
@@ -141,7 +141,35 @@ function normalizeUrl(value) {
   return `https://${trimmed}`;
 }
 
+function normalizeBackgroundSource(value) {
+  const trimmed = String(value || "").trim();
+  if (!trimmed) {
+    return "";
+  }
+
+  // Keep already-valid absolute, root-relative, and browser-managed sources.
+  if (/^(https?:|data:|blob:)/i.test(trimmed) || trimmed.startsWith("/") || trimmed.startsWith("./") || trimmed.startsWith("../")) {
+    return trimmed;
+  }
+
+  // Treat local media file names as deploy-root assets.
+  if (/\.(mp4|webm|ogg|png|jpe?g|gif|webp|svg)(\?|$)/i.test(trimmed)) {
+    return `/${trimmed.replace(/^\/+/, "")}`;
+  }
+
+  return normalizeUrl(trimmed);
+}
+
 function isValidUrl(value) {
+  const raw = String(value || "").trim();
+  if (!raw) {
+    return false;
+  }
+
+  if (/^(data:|blob:)/i.test(raw) || raw.startsWith("/") || raw.startsWith("./") || raw.startsWith("../")) {
+    return true;
+  }
+
   try {
     const parsed = new URL(value);
     return parsed.protocol === "https:" || parsed.protocol === "http:";
@@ -266,7 +294,7 @@ function loadState() {
     state.shortcuts = Array.isArray(parsed.shortcuts) ? parsed.shortcuts : [...DEFAULT_SHORTCUTS];
     state.theme = "light";
     if (parsed.background && typeof parsed.background === "object") {
-      const parsedSrc = String(parsed.background.src || "").trim();
+      const parsedSrc = normalizeBackgroundSource(parsed.background.src || "");
       if (!parsedSrc) {
         state.background = { ...DEFAULT_BACKGROUND };
       } else {
@@ -710,9 +738,17 @@ function submitBackground(event) {
     return;
   }
 
-  const src = normalizeUrl(refs.bgSource.value.trim());
+  const src = normalizeBackgroundSource(refs.bgSource.value.trim());
   if (src && !isValidUrl(src)) {
     alert("Please use a valid background URL.");
+    return;
+  }
+
+  if (!src) {
+    state.background = { ...DEFAULT_BACKGROUND };
+    applyBackground();
+    saveState();
+    closeBackgroundDialog();
     return;
   }
 
