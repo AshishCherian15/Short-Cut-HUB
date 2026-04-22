@@ -1,10 +1,10 @@
-const STORAGE_KEY = "shortcuthub_data_v5";
+const STORAGE_KEY = "shortcuthub_data_v6";
 const FIRST_STORY_KEY = "shortcuthub_story_seen_v1";
 const FIRST_WELCOME_KEY = "shortcuthub_first_welcome_seen_v1";
 const DEFAULT_CREATOR_PHOTO = "https://github.com/AshishCherian15.png";
 const DEFAULT_BACKGROUND = {
-  type: "youtube",
-  src: "https://youtu.be/kf4MH987TrI?si=h64zyfxgZIjPlmDy",
+  type: "video",
+  src: "space-drive.webm",
   sourceKind: "url"
 };
 
@@ -30,17 +30,13 @@ const DEFAULT_SETTINGS = {
   searchEngine: "google",
   customSearchUrl: "",
   accent: "#3de0d0",
-  overlay: 56,
-  surfaceTransparency: 62,
-  tileOpacity: 72,
   showClock: true,
   showAbout: true,
   showFooter: true,
   bgAudio: true,
   bgMuted: false,
   audioVolume: 50,
-  creatorName: "Ashish Cherian",
-  creatorPhoto: DEFAULT_CREATOR_PHOTO
+  creatorName: "User"
 };
 
 const SEARCH_ENGINES = {
@@ -53,7 +49,7 @@ const SEARCH_ENGINES = {
 const state = {
   shortcuts: [],
   editIndex: null,
-  theme: "dark",
+  theme: "light",
   background: { ...DEFAULT_BACKGROUND },
   settings: { ...DEFAULT_SETTINGS }
 };
@@ -72,16 +68,10 @@ const refs = {
   addBtn: document.getElementById("addBtn"),
   settingsBtn: document.getElementById("settingsBtn"),
   bgBtn: document.getElementById("bgBtn"),
-  themeBtn: document.getElementById("themeBtn"),
-  exportBtn: document.getElementById("exportBtn"),
-  importBtn: document.getElementById("importBtn"),
-  importFile: document.getElementById("importFile"),
 
-  creatorName: document.getElementById("creatorName"),
-  creatorPhoto: document.getElementById("creatorPhoto"),
-  creatorChip: document.getElementById("creatorChip"),
   welcomeLine: document.getElementById("welcomeLine"),
   heroName: document.getElementById("heroName"),
+  clockUserName: document.getElementById("clockUserName"),
 
   shortcutDialog: document.getElementById("shortcutDialog"),
   shortcutForm: document.getElementById("shortcutForm"),
@@ -116,9 +106,6 @@ const refs = {
   setSearchEngine: document.getElementById("setSearchEngine"),
   setCustomSearchUrl: document.getElementById("setCustomSearchUrl"),
   setAccent: document.getElementById("setAccent"),
-  setOverlay: document.getElementById("setOverlay"),
-  setSurfaceTransparency: document.getElementById("setSurfaceTransparency"),
-  setTileOpacity: document.getElementById("setTileOpacity"),
   setShowClock: document.getElementById("setShowClock"),
   setShowAbout: document.getElementById("setShowAbout"),
   setShowFooter: document.getElementById("setShowFooter"),
@@ -126,16 +113,16 @@ const refs = {
   setBgMuted: document.getElementById("setBgMuted"),
   setAudioVolume: document.getElementById("setAudioVolume"),
   setCreatorName: document.getElementById("setCreatorName"),
-  setCreatorPhoto: document.getElementById("setCreatorPhoto"),
-  uploadCreatorBtn: document.getElementById("uploadCreatorBtn"),
-  creatorPhotoUpload: document.getElementById("creatorPhotoUpload"),
+  editNameBtn: document.getElementById("editNameBtn"),
 
   storyDialog: document.getElementById("storyDialog"),
   closeStoryBtn: document.getElementById("closeStoryBtn"),
   storyPhoto: document.getElementById("storyPhoto"),
 
   firstTimeDialog: document.getElementById("firstTimeDialog"),
+  firstTimeForm: document.getElementById("firstTimeForm"),
   firstTimeGreeting: document.getElementById("firstTimeGreeting"),
+  firstTimeNameInput: document.getElementById("firstTimeNameInput"),
   closeFirstTimeBtn: document.getElementById("closeFirstTimeBtn"),
 
   bgImage: document.getElementById("bgImage"),
@@ -172,24 +159,51 @@ function getFavicon(url) {
 }
 
 function getYoutubeId(url) {
+  const idPattern = /^[a-zA-Z0-9_-]{11}$/;
+  const direct = String(url || "").trim();
+  if (idPattern.test(direct)) {
+    return direct;
+  }
+
   try {
     const source = new URL(url);
-    if (source.hostname.includes("youtu.be")) {
-      return source.pathname.replace("/", "").split("?")[0];
+    const host = source.hostname.replace(/^www\./i, "").replace(/^m\./i, "");
+
+    if (host === "youtu.be") {
+      const shortId = source.pathname.split("/").filter(Boolean)[0] || "";
+      return idPattern.test(shortId) ? shortId : "";
     }
-    if (source.searchParams.get("v")) {
-      return source.searchParams.get("v");
+
+    const watchId = source.searchParams.get("v") || "";
+    if (idPattern.test(watchId)) {
+      return watchId;
     }
-    const parts = source.pathname.split("/").filter(Boolean);
-    return parts.pop() || "";
+
+    const pathParts = source.pathname.split("/").filter(Boolean);
+    const markerIndex = pathParts.findIndex((part) => ["embed", "shorts", "live", "v"].includes(part));
+    if (markerIndex >= 0) {
+      const embeddedId = pathParts[markerIndex + 1] || "";
+      if (idPattern.test(embeddedId)) {
+        return embeddedId;
+      }
+    }
+
+    const possiblePathId = pathParts[pathParts.length - 1] || "";
+    if (idPattern.test(possiblePathId)) {
+      return possiblePathId;
+    }
   } catch {
-    return "";
+    const match = direct.match(/([a-zA-Z0-9_-]{11})/);
+    return match ? match[1] : "";
   }
+
+  const fallbackMatch = direct.match(/([a-zA-Z0-9_-]{11})/);
+  return fallbackMatch ? fallbackMatch[1] : "";
 }
 
 function detectBackgroundType(src) {
   const value = String(src || "").toLowerCase();
-  if (value.includes("youtube.com") || value.includes("youtu.be")) {
+  if (value.includes("youtube.com") || value.includes("youtu.be") || value.includes("youtube-nocookie.com")) {
     return "youtube";
   }
   if (/\.(mp4|webm|ogg)(\?|$)/i.test(value)) {
@@ -240,7 +254,7 @@ function loadState() {
   const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) {
     state.shortcuts = [...DEFAULT_SHORTCUTS];
-    state.theme = "dark";
+    state.theme = "light";
     state.background = { ...DEFAULT_BACKGROUND };
     state.settings = { ...DEFAULT_SETTINGS };
     saveState();
@@ -250,21 +264,28 @@ function loadState() {
   try {
     const parsed = JSON.parse(raw);
     state.shortcuts = Array.isArray(parsed.shortcuts) ? parsed.shortcuts : [...DEFAULT_SHORTCUTS];
-    state.theme = parsed.theme === "light" ? "light" : "dark";
-    state.background = parsed.background && typeof parsed.background === "object"
-      ? {
-        type: parsed.background.type || DEFAULT_BACKGROUND.type,
-        src: parsed.background.src || DEFAULT_BACKGROUND.src,
-        sourceKind: parsed.background.sourceKind || "url"
+    state.theme = "light";
+    if (parsed.background && typeof parsed.background === "object") {
+      const parsedSrc = String(parsed.background.src || "").trim();
+      if (!parsedSrc) {
+        state.background = { ...DEFAULT_BACKGROUND };
+      } else {
+        state.background = {
+          type: parsed.background.type || detectBackgroundType(parsedSrc),
+          src: parsedSrc,
+          sourceKind: parsed.background.sourceKind || "url"
+        };
       }
-      : { ...DEFAULT_BACKGROUND };
+    } else {
+      state.background = { ...DEFAULT_BACKGROUND };
+    }
     state.settings = {
       ...DEFAULT_SETTINGS,
       ...(parsed.settings && typeof parsed.settings === "object" ? parsed.settings : {})
     };
   } catch {
     state.shortcuts = [...DEFAULT_SHORTCUTS];
-    state.theme = "dark";
+    state.theme = "light";
     state.background = { ...DEFAULT_BACKGROUND };
     state.settings = { ...DEFAULT_SETTINGS };
     saveState();
@@ -272,7 +293,7 @@ function loadState() {
 }
 
 function applyTheme() {
-  document.body.classList.toggle("light", state.theme === "light");
+  document.body.classList.add("light");
 }
 
 function sendYoutubeCommand(func, args = []) {
@@ -321,7 +342,10 @@ function buildYoutubeEmbedUrl(src) {
     return "";
   }
   const mute = !state.settings.bgAudio || state.settings.bgMuted ? "1" : "0";
-  return `https://www.youtube.com/embed/${id}?autoplay=1&mute=${mute}&controls=0&loop=1&playlist=${id}&playsinline=1&enablejsapi=1`;
+  const origin = window.location.origin && window.location.origin !== "null"
+    ? `&origin=${encodeURIComponent(window.location.origin)}`
+    : "";
+  return `https://www.youtube.com/embed/${id}?autoplay=1&mute=${mute}&controls=0&loop=1&playlist=${id}&playsinline=1&enablejsapi=1&rel=0&modestbranding=1${origin}`;
 }
 
 function applyBackground() {
@@ -331,6 +355,9 @@ function applyBackground() {
   bgYoutube.style.display = "none";
 
   if (!state.background.src) {
+    bgYoutube.src = "";
+    bgVideo.src = "";
+    bgImage.src = "";
     return;
   }
 
@@ -363,13 +390,28 @@ function applyBackground() {
 }
 
 function applyCreatorProfile() {
-  const name = state.settings.creatorName || "Ashish Cherian";
-  refs.creatorName.textContent = name;
+  const name = safeText(state.settings.creatorName || "").trim() || "User";
   refs.heroName.textContent = name;
   refs.welcomeLine.textContent = `Welcome, ${name}.`;
-  const photo = state.settings.creatorPhoto || DEFAULT_CREATOR_PHOTO;
-  refs.creatorPhoto.src = photo;
-  refs.storyPhoto.src = photo;
+  refs.clockUserName.textContent = name;
+  refs.storyPhoto.src = DEFAULT_CREATOR_PHOTO;
+}
+
+function editNameQuickly() {
+  const current = state.settings.creatorName || "";
+  const nextValue = prompt("Enter your name", current);
+  if (nextValue === null) {
+    return;
+  }
+  const clean = safeText(nextValue).trim();
+  if (!clean) {
+    alert("Name cannot be empty.");
+    return;
+  }
+  state.settings.creatorName = clean;
+  refs.setCreatorName.value = clean;
+  applyCreatorProfile();
+  saveState();
 }
 
 function applySettingsToUI() {
@@ -383,18 +425,11 @@ function applySettingsToUI() {
   refs.footer.style.display = state.settings.showFooter ? "block" : "none";
 
   document.documentElement.style.setProperty("--accent", state.settings.accent || DEFAULT_SETTINGS.accent);
-  const overlayOpacity = Math.max(20, Math.min(85, Number(state.settings.overlay || DEFAULT_SETTINGS.overlay)));
-  document.documentElement.style.setProperty("--overlay-alpha", (overlayOpacity / 100).toFixed(2));
-
-  const surfaceTransparency = Math.max(20, Math.min(90, Number(state.settings.surfaceTransparency || DEFAULT_SETTINGS.surfaceTransparency)));
-  const surfaceAlpha = surfaceTransparency / 100;
-  document.documentElement.style.setProperty("--glass", `rgba(255, 255, 255, ${surfaceAlpha.toFixed(2)})`);
-
-  const tileOpacity = Math.max(25, Math.min(100, Number(state.settings.tileOpacity || DEFAULT_SETTINGS.tileOpacity)));
-  const tileAlpha = tileOpacity / 100;
-  const tileAlphaLight = Math.min(0.98, tileAlpha + 0.26);
-  document.documentElement.style.setProperty("--tile-alpha", tileAlpha.toFixed(2));
-  document.documentElement.style.setProperty("--tile-alpha-light", tileAlphaLight.toFixed(2));
+  document.documentElement.style.setProperty("--dynamic-text", state.settings.accent || DEFAULT_SETTINGS.accent);
+  document.documentElement.style.setProperty("--overlay-alpha", "0.08");
+  document.documentElement.style.setProperty("--glass", "rgba(255, 255, 255, 0.08)");
+  document.documentElement.style.setProperty("--tile-alpha", "0.04");
+  document.documentElement.style.setProperty("--tile-alpha-light", "0.12");
 
   applyMediaAudioPreferences();
   applyCreatorProfile();
@@ -636,14 +671,9 @@ function deleteShortcut(index) {
   render();
 }
 
-function toggleTheme() {
-  state.theme = state.theme === "dark" ? "light" : "dark";
-  applyTheme();
-  saveState();
-}
-
 function openBackgroundDialog() {
-  refs.bgType.value = state.background.type || "auto";
+  const backgroundType = state.background.type || "auto";
+  refs.bgType.value = ["auto", "image", "video"].includes(backgroundType) ? backgroundType : "auto";
   refs.bgSource.value = state.background.sourceKind === "url" ? state.background.src : "";
   refs.bgUpload.value = "";
   openDialog(refs.backgroundDialog);
@@ -654,7 +684,7 @@ function closeBackgroundDialog() {
 }
 
 function clearBackground() {
-  state.background = { type: "image", src: "", sourceKind: "url" };
+  state.background = { ...DEFAULT_BACKGROUND };
   refs.bgYoutube.src = "";
   refs.bgVideo.src = "";
   refs.bgImage.src = "";
@@ -665,7 +695,7 @@ function clearBackground() {
 
 function submitBackground(event) {
   event.preventDefault();
-  const typeChoice = refs.bgType.value;
+  const typeChoice = refs.bgType.value || "auto";
   const upload = refs.bgUpload.files && refs.bgUpload.files[0];
 
   if (upload) {
@@ -688,6 +718,11 @@ function submitBackground(event) {
 
   const resolvedType = typeChoice === "auto" ? detectBackgroundType(src) : typeChoice;
 
+  if (resolvedType === "youtube" && src && !getYoutubeId(src)) {
+    alert("Could not detect a valid YouTube video ID from this URL.");
+    return;
+  }
+
   state.background = {
     type: resolvedType,
     src,
@@ -709,9 +744,6 @@ function syncSettingsForm() {
   refs.setSearchEngine.value = state.settings.searchEngine;
   refs.setCustomSearchUrl.value = state.settings.customSearchUrl;
   refs.setAccent.value = state.settings.accent;
-  refs.setOverlay.value = String(state.settings.overlay);
-  refs.setSurfaceTransparency.value = String(state.settings.surfaceTransparency);
-  refs.setTileOpacity.value = String(state.settings.tileOpacity);
   refs.setShowClock.value = state.settings.showClock ? "on" : "off";
   refs.setShowAbout.value = state.settings.showAbout ? "on" : "off";
   refs.setShowFooter.value = state.settings.showFooter ? "on" : "off";
@@ -719,7 +751,6 @@ function syncSettingsForm() {
   refs.setBgMuted.value = state.settings.bgMuted ? "on" : "off";
   refs.setAudioVolume.value = String(state.settings.audioVolume);
   refs.setCreatorName.value = state.settings.creatorName;
-  refs.setCreatorPhoto.value = state.settings.creatorPhoto;
 }
 
 function activateSettingsTab(tab) {
@@ -744,15 +775,9 @@ function closeSettingsDialog() {
 function submitSettings(event) {
   event.preventDefault();
   const customUrl = refs.setCustomSearchUrl.value.trim();
-  const creatorPhoto = normalizeUrl(refs.setCreatorPhoto.value.trim());
 
   if (refs.setSearchEngine.value === "custom" && customUrl && !customUrl.includes("%s")) {
     alert("Custom search URL must include %s placeholder.");
-    return;
-  }
-
-  if (creatorPhoto && !isValidUrl(creatorPhoto)) {
-    alert("Creator photo URL is invalid.");
     return;
   }
 
@@ -766,17 +791,13 @@ function submitSettings(event) {
     searchEngine: refs.setSearchEngine.value,
     customSearchUrl: customUrl,
     accent: refs.setAccent.value,
-    overlay: Number(refs.setOverlay.value),
-    surfaceTransparency: Number(refs.setSurfaceTransparency.value),
-    tileOpacity: Number(refs.setTileOpacity.value),
     showClock: refs.setShowClock.value === "on",
     showAbout: refs.setShowAbout.value === "on",
     showFooter: refs.setShowFooter.value === "on",
     bgAudio: refs.setBgAudio.value === "on",
     bgMuted: refs.setBgMuted.value === "on",
     audioVolume: Number(refs.setAudioVolume.value),
-    creatorName: safeText(refs.setCreatorName.value.trim()) || "Ashish Cherian",
-    creatorPhoto: creatorPhoto || DEFAULT_CREATOR_PHOTO
+    creatorName: safeText(refs.setCreatorName.value.trim()) || "User"
   };
 
   applySettingsToUI();
@@ -793,7 +814,7 @@ function resetDefaults() {
   }
 
   state.settings = { ...DEFAULT_SETTINGS };
-  state.theme = "dark";
+  state.theme = "light";
   state.background = { ...DEFAULT_BACKGROUND };
   refs.bgYoutube.src = "";
   refs.bgVideo.src = "";
@@ -807,70 +828,12 @@ function resetDefaults() {
   syncSettingsForm();
 }
 
-function exportData() {
-  const blob = new Blob([
-    JSON.stringify({
-      shortcuts: state.shortcuts,
-      theme: state.theme,
-      background: serializableBackground(),
-      settings: state.settings
-    }, null, 2)
-  ], { type: "application/json" });
-  const anchor = document.createElement("a");
-  anchor.href = URL.createObjectURL(blob);
-  anchor.download = "shortcuthub-backup.json";
-  anchor.click();
-  URL.revokeObjectURL(anchor.href);
-}
-
-function importData(event) {
-  const file = event.target.files[0];
-  if (!file) {
-    return;
-  }
-
-  const reader = new FileReader();
-  reader.onload = () => {
-    try {
-      const parsed = JSON.parse(String(reader.result));
-      if (!Array.isArray(parsed.shortcuts)) {
-        alert("Invalid backup file.");
-        return;
-      }
-
-      state.shortcuts = parsed.shortcuts;
-      state.theme = parsed.theme === "light" ? "light" : "dark";
-      state.background = parsed.background && typeof parsed.background === "object"
-        ? {
-          type: parsed.background.type || DEFAULT_BACKGROUND.type,
-          src: parsed.background.src || DEFAULT_BACKGROUND.src,
-          sourceKind: parsed.background.sourceKind || "url"
-        }
-        : { ...DEFAULT_BACKGROUND };
-      state.settings = {
-        ...DEFAULT_SETTINGS,
-        ...(parsed.settings && typeof parsed.settings === "object" ? parsed.settings : {}),
-        creatorPhoto: parsed.settings && parsed.settings.creatorPhoto ? parsed.settings.creatorPhoto : DEFAULT_CREATOR_PHOTO
-      };
-
-      applyTheme();
-      applyBackground();
-      applySettingsToUI();
-      saveState();
-      render();
-      refs.importFile.value = "";
-    } catch {
-      alert("Could not read this backup file.");
-    }
-  };
-  reader.readAsText(file);
-}
-
 function updateClock() {
   const now = new Date();
   refs.clock.textContent = now.toLocaleTimeString([], {
     hour: "2-digit",
-    minute: "2-digit"
+    minute: "2-digit",
+    second: "2-digit"
   });
   refs.date.textContent = now.toLocaleDateString([], {
     weekday: "long",
@@ -919,21 +882,6 @@ function toggleAudioState() {
   saveState();
 }
 
-function uploadCreatorPhoto(event) {
-  const file = event.target.files && event.target.files[0];
-  if (!file) {
-    return;
-  }
-  const reader = new FileReader();
-  reader.onload = () => {
-    state.settings.creatorPhoto = String(reader.result || DEFAULT_CREATOR_PHOTO);
-    refs.setCreatorPhoto.value = state.settings.creatorPhoto;
-    applyCreatorProfile();
-    saveState();
-  };
-  reader.readAsDataURL(file);
-}
-
 function maybeShowStory() {
   const seen = localStorage.getItem(FIRST_STORY_KEY) === "1";
   if (seen) {
@@ -959,11 +907,26 @@ function maybeShowFirstTimeMessage() {
     return false;
   }
   refs.firstTimeGreeting.textContent = getTimeGreeting();
+  refs.firstTimeNameInput.value = "";
   openDialog(refs.firstTimeDialog);
   return true;
 }
 
-function closeFirstTimeMessage() {
+function closeFirstTimeMessage(event) {
+  if (event) {
+    event.preventDefault();
+  }
+
+  const providedName = safeText(refs.firstTimeNameInput.value).trim();
+  if (!providedName) {
+    alert("Please enter your name to continue.");
+    refs.firstTimeNameInput.focus();
+    return;
+  }
+
+  state.settings.creatorName = providedName;
+  applyCreatorProfile();
+  saveState();
   localStorage.setItem(FIRST_WELCOME_KEY, "1");
   closeDialog(refs.firstTimeDialog);
   maybeShowStory();
@@ -1002,17 +965,10 @@ function initEvents() {
   refs.search.addEventListener("keydown", maybeSearchWeb);
 
   refs.brandBtn.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
-  refs.creatorChip.addEventListener("click", () => {
-    window.location.href = "about.html";
-  });
 
   refs.addBtn.addEventListener("click", () => openShortcutDialog());
   refs.settingsBtn.addEventListener("click", openSettingsDialog);
-  refs.themeBtn.addEventListener("click", toggleTheme);
   refs.bgBtn.addEventListener("click", openBackgroundDialog);
-  refs.exportBtn.addEventListener("click", exportData);
-  refs.importBtn.addEventListener("click", () => refs.importFile.click());
-  refs.importFile.addEventListener("change", importData);
 
   refs.shortcutForm.addEventListener("submit", submitShortcut);
   refs.cancelDialog.addEventListener("click", closeShortcutDialog);
@@ -1031,12 +987,11 @@ function initEvents() {
     });
   });
 
-  refs.uploadCreatorBtn.addEventListener("click", () => refs.creatorPhotoUpload.click());
-  refs.creatorPhotoUpload.addEventListener("change", uploadCreatorPhoto);
+  refs.editNameBtn.addEventListener("click", editNameQuickly);
 
   refs.audioToggle.addEventListener("click", toggleAudioState);
   refs.closeStoryBtn.addEventListener("click", closeStory);
-  refs.closeFirstTimeBtn.addEventListener("click", closeFirstTimeMessage);
+  refs.firstTimeForm.addEventListener("submit", closeFirstTimeMessage);
 
   refs.bgYoutube.addEventListener("load", () => {
     window.setTimeout(syncYoutubeAudio, 700);
@@ -1051,7 +1006,7 @@ function init() {
   applyBackground();
   applySettingsToUI();
   updateClock();
-  setInterval(updateClock, 15000);
+  setInterval(updateClock, 1000);
   initEvents();
   render();
   const welcomeShown = maybeShowFirstTimeMessage();

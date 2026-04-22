@@ -29,18 +29,6 @@
         <button id="addBtn" class="btn btn-primary" type="button">Add Shortcut</button>
         <button id="bgBtn" class="btn" type="button">Background</button>
         <button id="settingsBtn" class="btn" type="button">Settings</button>
-        <button id="themeBtn" class="btn" type="button">Theme</button>
-        <button id="exportBtn" class="btn" type="button">Export</button>
-        <button id="importBtn" class="btn" type="button">Import</button>
-        <input id="importFile" type="file" accept="application/json" hidden>
-      </div>
-
-      <div class="creator-chip" id="creatorChip" title="Creator profile">
-        <img id="creatorPhoto" class="creator-photo" alt="Creator photo">
-        <div>
-          <strong id="creatorName">Ashish</strong>
-          <p class="creator-role">Creator</p>
-        </div>
       </div>
     </header>
 
@@ -54,6 +42,7 @@
       <div class="clock-wrap">
         <div id="clock" class="clock">--:--</div>
         <div id="date" class="date">Loading date...</div>
+        <div id="clockUserName" class="clock-user-name"></div>
       </div>
     </header>
 
@@ -69,7 +58,7 @@
 
     <section class="hero-stats" aria-label="ShortcutHub overview">
       <article class="stat-card">
-        <p class="stat-label">Creator</p>
+        <p class="stat-label">User</p>
         <h3 id="heroName">Ashish Cherian</h3>
         <p class="stat-copy">Your personalized command center is ready.</p>
       </article>
@@ -150,13 +139,12 @@
         <option value="auto">Auto detect (recommended)</option>
         <option value="image">Image URL</option>
         <option value="video">Video URL</option>
-        <option value="youtube">YouTube URL</option>
       </select>
       <label>Source URL</label>
-      <input id="bgSource" placeholder="Paste image, video, or YouTube link">
+      <input id="bgSource" placeholder="Paste image or video URL">
       <label>Upload from your device</label>
       <input id="bgUpload" type="file" accept="image/*,video/*">
-      <p class="hint">Tip: for YouTube, paste a normal watch URL or youtu.be link. Uploaded videos can play with audio when sound is enabled.</p>
+      <p class="hint">Tip: paste a direct image or video URL. Uploaded videos can play with audio when sound is enabled.</p>
       <div class="dialog-actions">
         <button class="btn" type="button" id="clearBackground">Clear</button>
         <button class="btn" type="button" id="cancelBackground">Cancel</button>
@@ -181,18 +169,6 @@
         <div class="settings-grid">
           <label class="setting-item">Accent color
             <input id="setAccent" type="color" value="#3de0d0">
-          </label>
-
-          <label class="setting-item">Overlay intensity
-            <input id="setOverlay" type="range" min="20" max="85" value="56">
-          </label>
-
-          <label class="setting-item">Panel transparency
-            <input id="setSurfaceTransparency" type="range" min="20" max="90" value="62">
-          </label>
-
-          <label class="setting-item">Card opacity
-            <input id="setTileOpacity" type="range" min="25" max="100" value="72">
           </label>
 
           <label class="setting-item">Tile density
@@ -303,18 +279,13 @@
 
       <section class="settings-pane" data-pane="profile">
         <div class="settings-grid">
-          <label class="setting-item">Creator name
+          <label class="setting-item">User name
             <input id="setCreatorName" placeholder="Your name">
           </label>
 
-          <label class="setting-item">Creator photo URL
-            <input id="setCreatorPhoto" placeholder="https://example.com/me.jpg">
-          </label>
-
           <div class="setting-item">
-            <span>Creator photo from device</span>
-            <button id="uploadCreatorBtn" class="btn" type="button">Upload Photo</button>
-            <input id="creatorPhotoUpload" type="file" accept="image/*" hidden>
+            <span>Name quick edit</span>
+            <button id="editNameBtn" class="btn" type="button">Edit Name</button>
           </div>
         </div>
       </section>
@@ -364,7 +335,7 @@
   </dialog>
 
   <dialog id="firstTimeDialog" class="dialog">
-    <form method="dialog" class="story-form">
+    <form id="firstTimeForm" method="dialog" class="story-form">
       <h3>Welcome to ShortcutHub 👋</h3>
       <p>
         <strong id="firstTimeGreeting">Good day</strong>, this is your first launch. Everything is ready for a focused start.
@@ -372,8 +343,10 @@
       <p>
         Add your favorite links, tune your layout from Settings, and make this page truly yours.
       </p>
+      <label for="firstTimeNameInput">What should we call you?</label>
+      <input id="firstTimeNameInput" maxlength="40" placeholder="Enter your name" required>
       <div class="dialog-actions">
-        <button id="closeFirstTimeBtn" class="btn btn-primary" value="ok">Let us begin</button>
+        <button id="closeFirstTimeBtn" class="btn btn-primary" value="ok">Save and begin</button>
       </div>
     </form>
   </dialog>
